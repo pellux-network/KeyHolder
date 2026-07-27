@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/pellux-network/KeyHolder/compare/v1.0.0...v1.0.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* combine release-please and exe build into one workflow ([#3](https://github.com/pellux-network/KeyHolder/issues/3)) ([3e66a16](https://github.com/pellux-network/KeyHolder/commit/3e66a161fa3d237b9d6a536b826360ec4008fc14))
+
 ## 1.0.0 (2026-07-27)
 
 
