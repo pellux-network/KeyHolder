@@ -10,10 +10,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets")
 
-GREEN_LIGHT = (102, 187, 106)   # bevel highlight base
-GREEN_DARK = (56, 142, 60)      # bevel shadow base
+GREEN_LIGHT = (102, 187, 106)  # bevel highlight base
+GREEN_DARK = (56, 142, 60)  # bevel shadow base
 GREEN_BORDER = (46, 125, 50)
-RING_COLOR = (76, 175, 80)      # matches app.py COLOR_HELD
 WHITE = (255, 255, 255)
 TEXT_DARK = (51, 51, 51)
 
@@ -27,22 +26,15 @@ def _rounded_rect_mask(size, box, radius):
 
 
 def make_icon(canvas_size: int = 512) -> Image.Image:
+    # Small (taskbar-size) icons need to be bold and fill nearly the whole
+    # canvas — thin decorative details (rings, fine gradients) just blur
+    # into mush once downsampled to 16-32px, so this design intentionally
+    # has one shape, one glyph, and minimal transparent padding.
     s = canvas_size
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
 
-    # Outer "hold ring" — a soft halo suggesting an actively-held/toggled state.
-    ring = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    ring_draw = ImageDraw.Draw(ring)
-    ring_margin = int(s * 0.04)
-    ring_draw.ellipse(
-        [ring_margin, ring_margin, s - ring_margin, s - ring_margin],
-        outline=RING_COLOR + (110,),
-        width=max(2, int(s * 0.018)),
-    )
-    img = Image.alpha_composite(img, ring)
-
     # Keycap body: vertical gradient, rounded-rect mask.
-    margin = int(s * 0.16)
+    margin = int(s * 0.06)
     box = [margin, margin, s - margin, s - margin]
     radius = int(s * 0.20)
 
@@ -62,18 +54,18 @@ def make_icon(canvas_size: int = 512) -> Image.Image:
     # Border stroke.
     border = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     ImageDraw.Draw(border).rounded_rectangle(
-        box, radius=radius, outline=GREEN_BORDER + (255,), width=max(2, int(s * 0.014))
+        box, radius=radius, outline=GREEN_BORDER + (255,), width=max(2, int(s * 0.022))
     )
     img = Image.alpha_composite(img, border)
 
     # Top bevel highlight (keycap light reflection).
     highlight = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    hl_box = [box[0] + int(s * 0.10), box[1] + int(s * 0.06), box[2] - int(s * 0.10), box[1] + int(s * 0.22)]
+    hl_box = [box[0] + int(s * 0.09), box[1] + int(s * 0.07), box[2] - int(s * 0.09), box[1] + int(s * 0.24)]
     ImageDraw.Draw(highlight).rounded_rectangle(hl_box, radius=int(s * 0.06), fill=WHITE + (70,))
     img = Image.alpha_composite(img, highlight)
 
     # Centered "K" glyph.
-    font = ImageFont.truetype(FONT_PATH, int(s * 0.44))
+    font = ImageFont.truetype(FONT_PATH, int(s * 0.52))
     text_layer = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     td = ImageDraw.Draw(text_layer)
     bbox = td.textbbox((0, 0), "K", font=font)
@@ -112,9 +104,10 @@ def main() -> None:
 
     icon = make_icon(512)
     icon.save(os.path.join(ASSETS_DIR, "icon.png"))
+    ico_sizes = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
     icon.save(
         os.path.join(ASSETS_DIR, "icon.ico"),
-        sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)],
+        sizes=[(n, n) for n in ico_sizes],
     )
 
     wordmark = make_wordmark(icon)
