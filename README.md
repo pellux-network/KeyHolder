@@ -1,9 +1,19 @@
 ![KeyHolder](assets/logo.png)
 
+[![CI](https://github.com/pellux-network/KeyHolder/actions/workflows/ci.yml/badge.svg)](https://github.com/pellux-network/KeyHolder/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/pellux-network/KeyHolder)](https://github.com/pellux-network/KeyHolder/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Toggle keyboard keys on/off as if physically held down, via a Tkinter UI.
 Uses the Win32 `SendInput` API with hardware scan codes — Windows only.
 
-## Run
+## Download
+
+Grab the latest `KeyHolder.exe` from the [Releases page](https://github.com/pellux-network/KeyHolder/releases/latest) —
+no Python install required. Each release's exe is built and verified on GitHub's
+own servers directly from the tagged source.
+
+## Run from source
 
     python main.py
 
@@ -28,8 +38,22 @@ Uses the Win32 `SendInput` API with hardware scan codes — Windows only.
 ## Requirements
 
 - Windows
-- Python 3.10+ (stdlib only — `tkinter` and `ctypes`)
-- `pytest` for running the test suite (`pip install pytest`, then `pytest -v`)
+- Python 3.10+ (stdlib only at runtime — `tkinter` and `ctypes`)
+
+## Development
+
+    pip install -e .[dev]
+    python -m ruff check .
+    python -m pytest -v
+
+CI runs both on every push and pull request. `master` is a protected branch —
+changes go through a pull request, which must pass CI before merging.
+
+Releases are automated: [release-please](https://github.com/googleapis/release-please)
+opens a release PR from [Conventional Commits](https://www.conventionalcommits.org/)
+on `master`; merging it tags a release, which triggers a workflow that builds
+`KeyHolder.exe` with PyInstaller on a GitHub-hosted Windows runner and attaches
+it to that release.
 
 ## Known limitations
 
@@ -40,3 +64,7 @@ Uses the Win32 `SendInput` API with hardware scan codes — Windows only.
 - If the target application runs elevated (as Administrator), Windows UIPI
   may block input from a non-elevated KeyHolder; run KeyHolder as
   Administrator too in that case.
+
+## License
+
+[MIT](LICENSE)
