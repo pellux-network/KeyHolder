@@ -1,4 +1,4 @@
-# KeyHolder
+![KeyHolder](assets/logo.png)
 
 Toggle keyboard keys on/off as if physically held down, via a Tkinter UI.
 Uses the Win32 `SendInput` API with hardware scan codes — Windows only.
@@ -16,11 +16,10 @@ Uses the Win32 `SendInput` API with hardware scan codes — Windows only.
 - **Repeat mode** (checkbox, on by default): while a key is held, re-sends
   the key-down roughly every 33ms (after an initial ~500ms delay, like a
   real keyboard's typematic repeat). Needed for apps that read normal
-  keyboard messages instead of polling raw key state — Notepad, Java/AWT
-  clients like OSRS. Turn it off for games that poll raw key state
-  (`GetAsyncKeyState`/DirectInput/raw input): a single key-down already
-  registers as held for those, and skipping the repeat avoids the
-  continuous stream of synthetic events entirely.
+  keyboard messages instead of polling raw key state. Turn it off for apps
+  that poll raw key state (`GetAsyncKeyState`/DirectInput/raw input): a
+  single key-down already registers as held for those, and skipping the
+  repeat avoids the continuous stream of synthetic events entirely.
 - "Release All" releases every held key immediately.
 - **Panic key: Pause/Break** — releases all held keys instantly, even if
   KeyHolder isn't the focused window.

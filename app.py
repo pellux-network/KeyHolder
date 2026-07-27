@@ -88,12 +88,12 @@ class KeyHolderApp:
         tk.Button(controls_frame, text="Release All", command=self.release_all).pack(side=tk.LEFT)
         tk.Checkbutton(
             controls_frame,
-            text="Repeat mode (needed for games/apps that don't poll raw key state, e.g. OSRS, Notepad)",
+            text="Repeat mode (for apps that don't poll raw key state)",
             variable=self.repeat_enabled,
             command=self._on_repeat_enabled_changed,
         ).pack(side=tk.LEFT, padx=(8, 0))
-        tk.Label(controls_frame, textvariable=self.status_var).pack(side=tk.LEFT, padx=(8, 0))
         tk.Label(controls_frame, text="Panic key: Pause/Break").pack(side=tk.RIGHT)
+        tk.Label(controls_frame, textvariable=self.status_var, fg=COLOR_HELD).pack(side=tk.LEFT, expand=True)
 
     def _build_row(self, parent: tk.Frame, row) -> None:
         row_frame = tk.Frame(parent)
