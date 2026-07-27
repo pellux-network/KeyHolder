@@ -14,7 +14,7 @@ GREEN_LIGHT = (102, 187, 106)  # bevel highlight base
 GREEN_DARK = (56, 142, 60)  # bevel shadow base
 GREEN_BORDER = (46, 125, 50)
 WHITE = (255, 255, 255)
-TEXT_DARK = (51, 51, 51)
+WORDMARK_TEXT = (235, 235, 235)  # light — readable on GitHub's dark README theme
 
 FONT_PATH = r"C:\Windows\Fonts\segoeuib.ttf"
 
@@ -124,7 +124,7 @@ def make_wordmark(icon: Image.Image, width: int = 900, height: int = 240) -> Ima
     th = bbox[3] - bbox[1]
     text_x = icon_x + icon_h + int(height * 0.18)
     text_y = (height - th) / 2 - bbox[1]
-    draw.text((text_x, text_y), text, font=font, fill=TEXT_DARK + (255,))
+    draw.text((text_x, text_y), text, font=font, fill=WORDMARK_TEXT + (255,))
 
     content_right = text_x + draw.textlength(text, font=font)
     return banner.crop((0, 0, int(content_right + height * 0.1), height))
