@@ -61,7 +61,9 @@ def make_icon(canvas_size: int = 512) -> Image.Image:
 
     # Border stroke.
     border = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    ImageDraw.Draw(border).rounded_rectangle(box, radius=radius, outline=GREEN_BORDER + (255,), width=max(2, int(s * 0.014)))
+    ImageDraw.Draw(border).rounded_rectangle(
+        box, radius=radius, outline=GREEN_BORDER + (255,), width=max(2, int(s * 0.014))
+    )
     img = Image.alpha_composite(img, border)
 
     # Top bevel highlight (keycap light reflection).

@@ -99,7 +99,9 @@ class KeyHolderApp:
         row_frame = tk.Frame(parent)
         row_frame.pack(anchor=tk.W)
         for label, key_id, width in row:
-            kb = KeyButton(row_frame, label, key_id, self.controller, self.status_var, width, self._on_key_toggled)
+            kb = KeyButton(
+                row_frame, label, key_id, self.controller, self.status_var, width, self._on_key_toggled
+            )
             kb.button.pack(side=tk.LEFT, padx=1, pady=1)
             self.key_buttons.append(kb)
 

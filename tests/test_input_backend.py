@@ -1,6 +1,8 @@
 import ctypes
 from unittest.mock import patch
 
+import pytest
+
 import input_backend as ib
 
 
@@ -88,11 +90,8 @@ def test_key_down_failure_does_not_mark_key_as_held():
 
 def test_unknown_key_id_raises_keyerror():
     controller = ib.KeyboardController()
-    try:
+    with pytest.raises(KeyError):
         controller.key_down("not_a_real_key")
-        assert False, "expected KeyError"
-    except KeyError:
-        pass
 
 
 def test_input_struct_size_matches_win32_expectation():
