@@ -3,6 +3,11 @@ name: release-please
 on:
   push:
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to (re)build KeyHolder.exe for and attach to"
+        required: true
 
 permissions:
   contents: write
@@ -10,9 +15,49 @@ permissions:
 
 jobs:
   release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # A separate job (not a second workflow) on purpose: release-please-action
+  # creates the release using GITHUB_TOKEN, and GITHUB_TOKEN-triggered events
+  # don't cascade to trigger *other* workflow files (an anti-recursion
+  # measure) — so a standalone "on: release published" workflow silently
+  # never runs. Job outputs within the same run aren't subject to that.
+  build:
+    needs: release-please
+    if: |
+      always() &&
+      (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      TARGET_TAG: ${{ github.event.inputs.tag || needs.release-please.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_TAG }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e .[dev]
+
+      - name: Build exe
+        run: pyinstaller --onefile --windowed --icon=assets/icon.ico --add-data "assets;assets" --name KeyHolder main.py
+
+      - name: Attach exe to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ env.TARGET_TAG }}" dist/KeyHolder.exe --clobber
