@@ -19,12 +19,22 @@ Run a single test:
 python -m pytest tests/test_input_backend.py::test_key_down_sends_correct_scancode_and_sets_scancode_flag -v
 ```
 
-Install test dependencies (stdlib-only otherwise):
+Install dev dependencies (stdlib-only at runtime otherwise):
 ```
-pip install pytest
+pip install -e .[dev]
 ```
 
-There is no build/lint step — this is a small stdlib-only Tkinter app plus a pytest suite.
+Lint (must pass in CI):
+```
+python -m ruff check .
+```
+
+Note: `python -m ruff format` is *not* enforced — its default style would explode the compact `SCANCODES` dict in `input_backend.py` and the `ROWS`/`NAV_ROWS` tables in `keyboard_layout.py` into one-entry-per-line, which hurts their readability as scannable grids. Only `ruff check` (actual lint rules) is required.
+
+Build the standalone Windows exe locally (same command CI uses on release):
+```
+pyinstaller --onefile --windowed --icon=assets/icon.ico --name KeyHolder main.py
+```
 
 ## Architecture
 
@@ -57,3 +67,10 @@ Windows-only desktop app (Tkinter UI + Win32 `SendInput`) that lets you toggle a
 ### Design docs
 
 `docs/superpowers/specs/` and `docs/superpowers/plans/` hold the original design spec and implementation plan for this project, written via the superpowers brainstorming/planning skills — useful background on *why* things are shaped this way, not just what they do.
+
+### CI/CD and release process
+
+- **`master` is a protected branch.** Changes go through a pull request; `.github/workflows/ci.yml` (ruff + pytest) must pass before merging. No required review (solo-dev project).
+- **Releases are managed by [release-please](https://github.com/googleapis/release-please)** (`.github/workflows/release-please.yml`, config in `release-please-config.json` / `.release-please-manifest.json`, release-type `simple`). It reads Conventional Commit messages on `master` and keeps an open "release PR" (updating `CHANGELOG.md` and the version) up to date. Merging that PR creates the actual GitHub Release + tag. The very first release was bootstrapped to `1.0.0` via a `Release-As: 1.0.0` commit trailer rather than natural semver bumping from zero.
+- **`.github/workflows/release-build.yml`** triggers on `release: published`, builds `KeyHolder.exe` with PyInstaller on `windows-latest`, and uploads it as an asset on that same release via `gh release upload`.
+- Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `ci:`, `docs:`, `style:`, etc.) since release-please parses them to decide the next version bump.
