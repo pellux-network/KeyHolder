@@ -23,7 +23,7 @@ jobs:
         run: pip install -e .[dev]
 
       - name: Build exe
-        run: pyinstaller --onefile --windowed --icon=assets/icon.ico --name KeyHolder main.py
+        run: pyinstaller --onefile --windowed --icon=assets/icon.ico --add-data "assets;assets" --name KeyHolder main.py
 
       - name: Attach exe to release
         env:

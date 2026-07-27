@@ -1,12 +1,17 @@
 import ctypes
 import os
 import sys
-import tkinter as tk
+
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication
 
 from app import KeyHolderApp
 from input_backend import KeyboardController
 
-ICON_PATH = os.path.join(os.path.dirname(__file__), "assets", "icon.ico")
+# When frozen by PyInstaller (--onefile), files bundled via --add-data land
+# in a temp extraction dir given by sys._MEIPASS, not next to the exe.
+_BASE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(__file__))
+ICON_PATH = os.path.join(_BASE_DIR, "assets", "icon.ico")
 APP_USER_MODEL_ID = "PelluxNetwork.KeyHolder"
 
 
@@ -18,21 +23,24 @@ def main() -> None:
         )
         sys.exit(1)
 
-    # Without this, Windows groups the taskbar button under python.exe's own
-    # icon (since that's the actual running process) instead of ours, even
-    # though iconbitmap() correctly sets the title bar icon.
+    # Only affects taskbar grouping when run as `python main.py` (the
+    # packaged exe already groups under its own distinct path). Harmless,
+    # not load-bearing for the window icon itself — Qt handles that.
     try:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
     except Exception:
         pass
 
-    root = tk.Tk()
-    root.title("KeyHolder")
+    app = QApplication(sys.argv)
     if os.path.exists(ICON_PATH):
-        root.iconbitmap(ICON_PATH)
+        app.setWindowIcon(QIcon(ICON_PATH))
+
     controller = KeyboardController()
-    KeyHolderApp(root, controller)
-    root.mainloop()
+    window = KeyHolderApp(controller)
+    window.setWindowIcon(app.windowIcon())
+    window.show()
+
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 [![Latest release](https://img.shields.io/github/v/release/pellux-network/KeyHolder)](https://github.com/pellux-network/KeyHolder/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Toggle keyboard keys on/off as if physically held down, via a Tkinter UI.
+Toggle keyboard keys on/off as if physically held down, via a PySide6 UI.
 Uses the Win32 `SendInput` API with hardware scan codes — Windows only.
 
 ## Download
@@ -15,6 +15,7 @@ own servers directly from the tagged source.
 
 ## Run from source
 
+    pip install -e .
     python main.py
 
 ## Usage
@@ -38,7 +39,8 @@ own servers directly from the tagged source.
 ## Requirements
 
 - Windows
-- Python 3.10+ (stdlib only at runtime — `tkinter` and `ctypes`)
+- Python 3.10+
+- `PySide6` (installed automatically via `pip install -e .`)
 
 ## Development
 

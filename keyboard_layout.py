@@ -41,6 +41,9 @@ ROWS = [
 NAV_ROWS = [
     [("Ins", "insert", 1), ("Home", "home", 1), ("PgUp", "pageup", 1)],
     [("Del", "delete", 1), ("End", "end", 1), ("PgDn", "pagedown", 1)],
-    [("Up", "up", 1)],
+    # (None, None, width) is a blank spacer slot, not a key — used here so
+    # "Up" sits directly above "Down" (inverted-T arrow layout), matching a
+    # real keyboard instead of left-aligning under "Left".
+    [(None, None, 1), ("Up", "up", 1)],
     [("Left", "left", 1), ("Down", "down", 1), ("Right", "right", 1)],
 ]

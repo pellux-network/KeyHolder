@@ -25,30 +25,34 @@ def _rounded_rect_mask(size, box, radius):
     return mask
 
 
-def make_icon(canvas_size: int = 512) -> Image.Image:
+def make_icon(canvas_size: int = 512, *, detailed: bool = True) -> Image.Image:
     # Small (taskbar-size) icons need to be bold and fill nearly the whole
-    # canvas — thin decorative details (rings, fine gradients) just blur
-    # into mush once downsampled to 16-32px, so this design intentionally
-    # has one shape, one glyph, and minimal transparent padding.
+    # canvas. Critically, they're rendered as their OWN flat/high-contrast
+    # design (detailed=False), not produced by shrinking the big gradient
+    # artwork: a smooth 512px gradient only has 16-32 rows left once
+    # downsampled to taskbar size, which shows up as muddy banding instead
+    # of a clean fill — see build_ico_frames().
     s = canvas_size
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
 
-    # Keycap body: vertical gradient, rounded-rect mask.
     margin = int(s * 0.06)
     box = [margin, margin, s - margin, s - margin]
     radius = int(s * 0.20)
 
-    gradient = Image.new("RGB", (s, s), GREEN_LIGHT)
-    grad_draw = ImageDraw.Draw(gradient)
-    top, bottom = box[1], box[3]
-    for y in range(top, bottom + 1):
-        t = (y - top) / max(1, (bottom - top))
-        color = tuple(int(GREEN_LIGHT[i] + (GREEN_DARK[i] - GREEN_LIGHT[i]) * t) for i in range(3))
-        grad_draw.line([(box[0], y), (box[2], y)], fill=color)
+    if detailed:
+        fill_img = Image.new("RGB", (s, s), GREEN_LIGHT)
+        grad_draw = ImageDraw.Draw(fill_img)
+        top, bottom = box[1], box[3]
+        for y in range(top, bottom + 1):
+            t = (y - top) / max(1, (bottom - top))
+            color = tuple(int(GREEN_LIGHT[i] + (GREEN_DARK[i] - GREEN_LIGHT[i]) * t) for i in range(3))
+            grad_draw.line([(box[0], y), (box[2], y)], fill=color)
+    else:
+        fill_img = Image.new("RGB", (s, s), GREEN_DARK)
 
     mask = _rounded_rect_mask((s, s), box, radius)
     keycap = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    keycap.paste(gradient, (0, 0), mask)
+    keycap.paste(fill_img, (0, 0), mask)
     img = Image.alpha_composite(img, keycap)
 
     # Border stroke.
@@ -58,11 +62,19 @@ def make_icon(canvas_size: int = 512) -> Image.Image:
     )
     img = Image.alpha_composite(img, border)
 
-    # Top bevel highlight (keycap light reflection).
-    highlight = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    hl_box = [box[0] + int(s * 0.09), box[1] + int(s * 0.07), box[2] - int(s * 0.09), box[1] + int(s * 0.24)]
-    ImageDraw.Draw(highlight).rounded_rectangle(hl_box, radius=int(s * 0.06), fill=WHITE + (70,))
-    img = Image.alpha_composite(img, highlight)
+    if detailed:
+        # Top bevel highlight (keycap light reflection) — only at sizes
+        # large enough for a soft translucent rectangle to read as a
+        # highlight instead of a fuzzy smear.
+        highlight = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+        hl_box = [
+            box[0] + int(s * 0.09),
+            box[1] + int(s * 0.07),
+            box[2] - int(s * 0.09),
+            box[1] + int(s * 0.24),
+        ]
+        ImageDraw.Draw(highlight).rounded_rectangle(hl_box, radius=int(s * 0.06), fill=WHITE + (70,))
+        img = Image.alpha_composite(img, highlight)
 
     # Centered "K" glyph.
     font = ImageFont.truetype(FONT_PATH, int(s * 0.52))
@@ -76,6 +88,25 @@ def make_icon(canvas_size: int = 512) -> Image.Image:
     img = Image.alpha_composite(img, text_layer)
 
     return img
+
+
+def make_icon_frame(target_size: int, *, detailed: bool) -> Image.Image:
+    """Renders at a large supersampled canvas, then downsamples to target_size.
+
+    This keeps edges clean (antialiased) at the final small size without
+    ever passing through the detailed/gradient artwork.
+    """
+    supersample = max(target_size * 8, 256)
+    frame = make_icon(supersample, detailed=detailed)
+    return frame.resize((target_size, target_size), Image.LANCZOS)
+
+
+def build_ico_frames() -> list[Image.Image]:
+    flat_sizes = [16, 20, 24, 32, 40, 48]
+    detailed_sizes = [64, 96, 128, 256]
+    frames = [make_icon_frame(sz, detailed=False) for sz in flat_sizes]
+    frames += [make_icon_frame(sz, detailed=True) for sz in detailed_sizes]
+    return frames
 
 
 def make_wordmark(icon: Image.Image, width: int = 900, height: int = 240) -> Image.Image:
@@ -104,10 +135,12 @@ def main() -> None:
 
     icon = make_icon(512)
     icon.save(os.path.join(ASSETS_DIR, "icon.png"))
-    ico_sizes = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
-    icon.save(
+
+    frames = build_ico_frames()
+    frames[-1].save(
         os.path.join(ASSETS_DIR, "icon.ico"),
-        sizes=[(n, n) for n in ico_sizes],
+        sizes=[(f.width, f.height) for f in frames],
+        append_images=frames[:-1],
     )
 
     wordmark = make_wordmark(icon)
